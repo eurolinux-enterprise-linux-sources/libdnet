@@ -1,21 +1,15 @@
-%if 0%{?rhel} && 0%{?rhel} <= 5
-%{!?python_sitelib: %global python_sitelib %(%{__python} -c "from distutils.sysconfig import get_python_lib; print(get_python_lib())")}
-%{!?python_sitearch: %global python_sitearch %(%{__python} -c "from distutils.sysconfig import get_python_lib; print(get_python_lib(1))")}
-%endif
-
 Summary:	Simple portable interface to lowlevel networking routines
 Name:		libdnet
 
 Version:	1.12
-Release:	11%{?dist}
+Release:	13.1%{?dist}
 
 License:	BSD
-Group:		System Environment/Libraries
 URL:		http://code.google.com/p/%{name}/
 
 Source:		http://%{name}.googlecode.com/files/%{name}-%{version}.tgz
 Patch0:		%{name}-shrext.patch
-BuildRoot:	%{_tmppath}/%{name}-%{version}-%{release}-root-%(%{__id_u} -n)
+Patch1:         dnet-config-multilib.patch
 
 %description
 libdnet provides a simplified, portable interface to several
@@ -27,7 +21,6 @@ packet and Ethernet frame, and data transmission.
 
 %package devel
 Summary:	Header files for libdnet library
-Group:		Development/Libraries
 Requires:	%{name} = %{version}-%{release}
 
 %description devel
@@ -35,7 +28,6 @@ Requires:	%{name} = %{version}-%{release}
 
 %package progs
 Summary:	Sample applications to use with libdnet
-Group:		Applications/Internet
 Requires:	%{name} = %{version}-%{release}
 
 %description progs
@@ -52,6 +44,7 @@ BuildRequires:	python-devel
 %prep
 %setup -q
 %patch0 -p1
+%patch1 -p0
 
 %build
 %configure --disable-static
@@ -64,27 +57,21 @@ pushd python
 popd
 
 %install
-%{__rm} -rf %{buildroot}
 %{__make} install DESTDIR=%{buildroot}
 
 pushd python
 %{__python} setup.py install --skip-build --root $RPM_BUILD_ROOT
 popd
 
-%clean
-%{__rm} -rf %{buildroot}
-
 %post -p /sbin/ldconfig
 
 %postun -p /sbin/ldconfig
 
 %files
-%defattr(-,root,root,-)
 %doc LICENSE README THANKS TODO
 %{_libdir}/*.so.*
 
 %files devel
-%defattr(-,root,root,-)
 %{_bindir}/*
 %{_libdir}/*.so
 %exclude %{_libdir}/*.la
@@ -92,7 +79,6 @@ popd
 %{_mandir}/man3/*.3*
 
 %files progs
-%defattr(-,root,root,-)
 %{_sbindir}/*
 %{_mandir}/man8/*.8*
 
@@ -100,6 +86,17 @@ popd
 %{python_sitearch}/*
 
 %changelog
+* Fri Mar 14 2014 Richard W.M. Jones <rjones@redhat.com> - 1.12-13.1.el7
+- Add patch to fix multilib conflicts in dnet-config
+  resolves: rhbz#1059593
+- Remove RPM cruft from the spec file.
+
+* Fri Jan 24 2014 Daniel Mach <dmach@redhat.com> - 1.12-13
+- Mass rebuild 2014-01-24
+
+* Fri Dec 27 2013 Daniel Mach <dmach@redhat.com> - 1.12-12
+- Mass rebuild 2013-12-27
+
 * Thu Feb 14 2013 Fedora Release Engineering <rel-eng@lists.fedoraproject.org> - 1.12-11
 - Rebuilt for https://fedoraproject.org/wiki/Fedora_19_Mass_Rebuild
 
